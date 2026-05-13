@@ -51,52 +51,17 @@ public static class U5Setup
     static void BuildLizardPrefab()
     {
         Directory.CreateDirectory("Assets/Prefabs");
-        var go = new GameObject("Lizard");
-        go.transform.localScale = new Vector3(40f, 40f, 1f);
 
-        Color bodyGreen     = new Color(0.30f, 0.55f, 0.28f);
-        Color belly         = new Color(0.50f, 0.70f, 0.40f);
-        Color spikeDark     = new Color(0.18f, 0.36f, 0.18f);
-        Color eyeYellow     = new Color(1f, 0.85f, 0.10f);
+        var lizardSprite = ConfigureAndLoadSprite("Assets/Sprites/Lizard.png");
+
+        var go = new GameObject("Lizard");
+        // Sprite is 40×40 px at PPU=1 → renders at 40 world units.
+        go.transform.localScale = Vector3.one;
 
         var body = go.AddComponent<SpriteRenderer>();
-        body.sprite = LoadWhite();
-        body.color = bodyGreen;
+        body.sprite = lizardSprite;
+        body.color = Color.white;
         body.sortingOrder = 50;
-
-        // Tail — extends north *outside* the body (local Y > 0.50). Two
-        // segments so it tapers visibly.
-        AddPart(go.transform, "Tail", new Vector3(0f, 0.70f, 0f),
-                new Vector3(0.18f, 0.45f, 1f), bodyGreen, 49);
-        AddPart(go.transform, "TailTip", new Vector3(0f, 0.98f, 0f),
-                new Vector3(0.10f, 0.22f, 1f), bodyGreen, 49);
-
-        // Back spikes — 3 darker spikes *outside* the east edge (local
-        // X > 0.50) so they read as protrusions sticking out of the body.
-        AddPart(go.transform, "SpikeN", new Vector3(0.62f, 0.25f, 0f),
-                new Vector3(0.18f, 0.14f, 1f), spikeDark, 51);
-        AddPart(go.transform, "SpikeM", new Vector3(0.68f, 0.00f, 0f),
-                new Vector3(0.20f, 0.14f, 1f), spikeDark, 51);
-        AddPart(go.transform, "SpikeS", new Vector3(0.62f, -0.25f, 0f),
-                new Vector3(0.18f, 0.14f, 1f), spikeDark, 51);
-
-        // Snout — wider base inside the body + narrow tip outside (local
-        // Y < -0.50) so the head visibly extends south of the body.
-        AddPart(go.transform, "Snout", new Vector3(0f, -0.28f, 0f),
-                new Vector3(0.62f, 0.34f, 1f), belly, 52);
-        AddPart(go.transform, "SnoutTip", new Vector3(0f, -0.62f, 0f),
-                new Vector3(0.30f, 0.28f, 1f), belly, 52);
-
-        // Eye whites (yellow), with small black pupils on top — both
-        // larger so they read at gameplay scale.
-        AddPart(go.transform, "EyeWhiteL", new Vector3(-0.22f, 0.12f, 0f),
-                new Vector3(0.24f, 0.24f, 1f), eyeYellow, 53);
-        AddPart(go.transform, "EyeWhiteR", new Vector3( 0.22f, 0.12f, 0f),
-                new Vector3(0.24f, 0.24f, 1f), eyeYellow, 53);
-        AddPart(go.transform, "PupilL", new Vector3(-0.20f, 0.10f, 0f),
-                new Vector3(0.10f, 0.10f, 1f), Color.black, 54);
-        AddPart(go.transform, "PupilR", new Vector3( 0.20f, 0.10f, 0f),
-                new Vector3(0.10f, 0.10f, 1f), Color.black, 54);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
@@ -105,7 +70,7 @@ public static class U5Setup
 
         var col = go.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
-        col.size = Vector2.one;
+        col.size = new Vector2(40f, 40f);
 
         go.AddComponent<Lizard>();
 
@@ -115,17 +80,28 @@ public static class U5Setup
         Debug.Log($"U5Setup: wrote {path}");
     }
 
-    static void AddPart(Transform parent, string name, Vector3 localPos,
-                        Vector3 localScale, Color color, int sortingOrder)
+    // Ensure a sprite PNG is imported with the same settings the rest of
+    // the game expects (PPU=1, Point filter, no compression, no mips).
+    static Sprite ConfigureAndLoadSprite(string path)
     {
-        var go = new GameObject(name);
-        go.transform.SetParent(parent, false);
-        go.transform.localPosition = localPos;
-        go.transform.localScale = localScale;
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = LoadWhite();
-        sr.color = color;
-        sr.sortingOrder = sortingOrder;
+        var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+        if (importer == null)
+            throw new System.Exception($"missing texture asset: {path}");
+        bool changed = false;
+        if (importer.textureType != TextureImporterType.Sprite)
+        { importer.textureType = TextureImporterType.Sprite; changed = true; }
+        if (importer.spritePixelsPerUnit != 1f)
+        { importer.spritePixelsPerUnit = 1f; changed = true; }
+        if (importer.filterMode != FilterMode.Point)
+        { importer.filterMode = FilterMode.Point; changed = true; }
+        if (importer.textureCompression != TextureImporterCompression.Uncompressed)
+        { importer.textureCompression = TextureImporterCompression.Uncompressed; changed = true; }
+        if (importer.mipmapEnabled)
+        { importer.mipmapEnabled = false; changed = true; }
+        if (changed) importer.SaveAndReimport();
+        var s = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        if (s == null) throw new System.Exception($"sprite load failed: {path}");
+        return s;
     }
 
     static void BuildFireSpitPrefab()

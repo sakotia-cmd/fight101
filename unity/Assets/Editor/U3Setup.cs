@@ -43,68 +43,56 @@ public static class U3Setup
         return s;
     }
 
+    // Ensure a sprite PNG is imported with the same settings the rest of
+    // the game expects (PPU=1, Point filter, no compression, no mips).
+    // Idempotent — only re-imports if something is wrong.
+    static Sprite ConfigureAndLoadSprite(string path)
+    {
+        var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+        if (importer == null)
+            throw new System.Exception($"missing texture asset: {path}");
+        bool changed = false;
+        if (importer.textureType != TextureImporterType.Sprite)
+        { importer.textureType = TextureImporterType.Sprite; changed = true; }
+        if (importer.spritePixelsPerUnit != 1f)
+        { importer.spritePixelsPerUnit = 1f; changed = true; }
+        if (importer.filterMode != FilterMode.Point)
+        { importer.filterMode = FilterMode.Point; changed = true; }
+        if (importer.textureCompression != TextureImporterCompression.Uncompressed)
+        { importer.textureCompression = TextureImporterCompression.Uncompressed; changed = true; }
+        if (importer.mipmapEnabled)
+        { importer.mipmapEnabled = false; changed = true; }
+        if (changed) importer.SaveAndReimport();
+        var s = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        if (s == null) throw new System.Exception($"sprite load failed: {path}");
+        return s;
+    }
+
     static void BuildMonkeyPrefab()
     {
         Directory.CreateDirectory("Assets/Prefabs");
 
+        var monkeySprite = ConfigureAndLoadSprite("Assets/Sprites/Monkey.png");
+
         var go = new GameObject("Monkey");
-        go.transform.localScale = new Vector3(36f, 36f, 1f);
+        // Sprite is 36×36 px at PPU=1 → renders at 36 world units. Root
+        // scale stays 1×1 so the sprite renders at its native size.
+        go.transform.localScale = Vector3.one;
 
-        // Main body — brown square. SpriteRenderer is on the root so
-        // Enemy.cs's flash-on-hit/depth-sort logic finds it.
         var body = go.AddComponent<SpriteRenderer>();
-        body.sprite = LoadWhite();
-        body.color = new Color(0.55f, 0.36f, 0.20f);   // monkey brown
+        body.sprite = monkeySprite;
+        body.color = Color.white;
         body.sortingOrder = 50;
-
-        Color earColor    = new Color(0.42f, 0.27f, 0.14f);   // dark brown
-        Color tailColor   = new Color(0.38f, 0.24f, 0.12f);   // darker brown
-        Color seedWhite   = Color.white;
-        Color mouthCol    = new Color(0.20f, 0.10f, 0.05f);
-
-        // Ears — pushed outside the body silhouette (local 0.55 > 0.50) so
-        // they stick out beyond the body edge and read as actual ears.
-        AddMonkeyPart(go.transform, "EarL", new Vector3(-0.55f, 0.45f, 0f),
-                      new Vector3(0.32f, 0.32f, 1f), earColor, 51);
-        AddMonkeyPart(go.transform, "EarR", new Vector3( 0.55f, 0.45f, 0f),
-                      new Vector3(0.32f, 0.32f, 1f), earColor, 51);
-
-        // Tail — long fat dark-brown rect *outside* the south edge (local
-        // Y < -0.50 so it sticks out below the body), sortOrder 49 so the
-        // body still overlaps the base for a "tail attached to body" look.
-        AddMonkeyPart(go.transform, "Tail", new Vector3(0.15f, -0.70f, 0f),
-                      new Vector3(0.18f, 0.50f, 1f), tailColor, 49);
-
-        // Muzzle — lighter patch around the lower face.
-        AddMonkeyPart(go.transform, "Muzzle", new Vector3(0f, -0.20f, 0f),
-                      new Vector3(0.60f, 0.36f, 1f),
-                      new Color(0.78f, 0.62f, 0.46f), 52);
-
-        // Eye whites — bigger white circles behind the black pupils so
-        // the face reads as a proper face, not dots on brown.
-        AddMonkeyPart(go.transform, "EyeWhiteL", new Vector3(-0.22f, 0.12f, 0f),
-                      new Vector3(0.28f, 0.28f, 1f), seedWhite, 52);
-        AddMonkeyPart(go.transform, "EyeWhiteR", new Vector3( 0.22f, 0.12f, 0f),
-                      new Vector3(0.28f, 0.28f, 1f), seedWhite, 52);
-
-        // Eyes — black pupils on top of the whites.
-        AddMonkeyPart(go.transform, "EyeL", new Vector3(-0.22f, 0.12f, 0f),
-                      new Vector3(0.14f, 0.14f, 1f), Color.black, 53);
-        AddMonkeyPart(go.transform, "EyeR", new Vector3( 0.22f, 0.12f, 0f),
-                      new Vector3(0.14f, 0.14f, 1f), Color.black, 53);
-
-        // Mouth — wider darker grin in the muzzle.
-        AddMonkeyPart(go.transform, "Mouth", new Vector3(0f, -0.32f, 0f),
-                      new Vector3(0.32f, 0.08f, 1f), mouthCol, 53);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.gravityScale = 0f;
         rb.useFullKinematicContacts = true;
 
+        // Collider matches the new sprite's world footprint (36×36).
         var col = go.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
-        col.size = new Vector2(1f, 1f);
+        col.size = new Vector2(36f, 36f);
 
         go.AddComponent<Monkey>();
 
@@ -112,19 +100,6 @@ public static class U3Setup
         PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         Debug.Log($"U3Setup: wrote {path}");
-    }
-
-    static void AddMonkeyPart(Transform parent, string name, Vector3 localPos,
-                              Vector3 localScale, Color color, int sortingOrder)
-    {
-        var go = new GameObject(name);
-        go.transform.SetParent(parent, false);
-        go.transform.localPosition = localPos;
-        go.transform.localScale = localScale;
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = LoadWhite();
-        sr.color = color;
-        sr.sortingOrder = sortingOrder;
     }
 
     static void UpgradePlayerPrefab()
