@@ -37,9 +37,17 @@ public class Projectile : MonoBehaviour
         col.isTrigger = true;
         col.radius = 0.5f;
 
-        var sr = GetComponent<SpriteRenderer>();
-        sr.color = color;
-        sr.sortingOrder = 180;
+        // Root SpriteRenderer is disabled (the visible art lives in
+        // composite children — Shaft / Head / Fletch — built in U4Setup).
+        // Tint every child sprite so the whole arrow takes the element
+        // colour passed in.
+        var children = GetComponentsInChildren<SpriteRenderer>(includeInactive: true);
+        foreach (var childSr in children)
+        {
+            if (childSr.gameObject == gameObject) continue;   // skip root
+            childSr.color = color;
+            childSr.sortingOrder = 180;
+        }
 
         // Aim the sprite forward.
         float angle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;

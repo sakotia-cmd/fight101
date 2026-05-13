@@ -58,10 +58,33 @@ public static class U4Setup
         Directory.CreateDirectory("Assets/Prefabs");
         var go = new GameObject("Projectile");
         go.transform.localScale = Vector3.one;
+
+        // Root SpriteRenderer satisfies Projectile's [RequireComponent], but
+        // we keep it disabled. The visible art lives in the child composite
+        // below so the projectile looks like an arrow regardless of weapon.
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = LoadWhite();
         sr.color = Color.white;
         sr.sortingOrder = 180;
+        sr.enabled = false;
+
+        // Arrow composite parented to the root so it rotates with the
+        // projectile (Projectile.cs rotates the root to face velocity).
+        // Local positions/scales are in root local space (root scale 1×1)
+        // and then scaled at runtime by `transform.localScale = (size, size, 1)`
+        // in Projectile.Init.
+        //   Shaft: long thin rect centred on the projectile origin
+        //   Head:  small forward-pointing rect (the arrow tip)
+        //   Fletch L/R: short slanted rects at the tail
+        AddPart(go.transform, "Shaft", new Vector3(0f, 0f, 0f),
+                new Vector3(2.6f, 0.40f, 1f), Color.white, 180);
+        AddPart(go.transform, "Head", new Vector3(1.5f, 0f, 0f),
+                new Vector3(0.80f, 0.70f, 1f), Color.white, 181);
+        AddPart(go.transform, "FletchU", new Vector3(-1.30f, 0.25f, 0f),
+                new Vector3(0.50f, 0.20f, 1f), Color.white, 181);
+        AddPart(go.transform, "FletchD", new Vector3(-1.30f, -0.25f, 0f),
+                new Vector3(0.50f, 0.20f, 1f), Color.white, 181);
+
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.gravityScale = 0f;
@@ -79,10 +102,36 @@ public static class U4Setup
     static void BuildHamburgerPrefab()
     {
         var go = new GameObject("Hamburger");
+        // Root SR = the golden top-bun mass. Children stack the rest of the
+        // layers in normalized local coords (parent scale 18 — set at
+        // runtime by Hamburger.cs Awake — multiplies child sizes).
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = LoadWhite();
-        sr.color = new Color(0.91f, 0.66f, 0.19f);
+        sr.color = new Color(0.93f, 0.72f, 0.30f);   // golden top bun
         sr.sortingOrder = 60;
+
+        // Bottom-bun rim — darker stripe at the south edge.
+        AddPart(go.transform, "BunBottom", new Vector3(0f, -0.45f, 0f),
+                new Vector3(1.0f, 0.12f, 1f),
+                new Color(0.78f, 0.55f, 0.18f), 61);
+
+        // Patty — dark-brown stripe.
+        AddPart(go.transform, "Patty", new Vector3(0f, -0.18f, 0f),
+                new Vector3(0.95f, 0.20f, 1f),
+                new Color(0.40f, 0.22f, 0.10f), 62);
+
+        // Lettuce — bright-green thin stripe above patty.
+        AddPart(go.transform, "Lettuce", new Vector3(0f, -0.02f, 0f),
+                new Vector3(1.0f, 0.10f, 1f),
+                new Color(0.40f, 0.75f, 0.30f), 63);
+
+        // Sesame seeds — two small cream squares on top bun, asymmetric.
+        Color seed = new Color(0.95f, 0.92f, 0.75f);
+        AddPart(go.transform, "Seed1", new Vector3(-0.20f, 0.26f, 0f),
+                new Vector3(0.10f, 0.06f, 1f), seed, 64);
+        AddPart(go.transform, "Seed2", new Vector3( 0.10f, 0.34f, 0f),
+                new Vector3(0.10f, 0.06f, 1f), seed, 64);
+
         go.AddComponent<CircleCollider2D>();
         go.AddComponent<Hamburger>();
         const string path = "Assets/Prefabs/Hamburger.prefab";
@@ -98,12 +147,34 @@ public static class U4Setup
         sr.sprite = LoadWhite();
         sr.color = new Color(1f, 0.84f, 0f);   // gold
         sr.sortingOrder = 55;
+
+        // Small sparkle child — Coin.cs fades its alpha in LateUpdate.
+        // Sat at top-right of the coin so it twinkles like a highlight.
+        AddPart(go.transform, "Sparkle", new Vector3(0.22f, 0.22f, 0f),
+                new Vector3(0.22f, 0.22f, 1f),
+                new Color(1f, 1f, 1f, 0.9f), 56);
+
         go.AddComponent<CircleCollider2D>();
         go.AddComponent<Coin>();
         const string path = "Assets/Prefabs/Coin.prefab";
         PrefabUtility.SaveAsPrefabAsset(go, path);
         Object.DestroyImmediate(go);
         Debug.Log($"U4Setup: wrote {path}");
+    }
+
+    // Tinted child SpriteRenderer helper, mirrors U3Setup.AddMonkeyPart /
+    // U5Setup.AddPart. Local position + scale are in PARENT local space.
+    static void AddPart(Transform parent, string name, Vector3 localPos,
+                        Vector3 localScale, Color color, int sortingOrder)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPos;
+        go.transform.localScale = localScale;
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = LoadWhite();
+        sr.color = color;
+        sr.sortingOrder = sortingOrder;
     }
 
     static void UpdateBootScene()

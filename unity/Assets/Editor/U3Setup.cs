@@ -56,10 +56,19 @@ public static class U3Setup
         body.color = new Color(0.55f, 0.36f, 0.20f);   // monkey brown
         body.sortingOrder = 50;
 
-        // Two ears. Local positions are in parent local space; parent's
-        // scale is (28, 28), so local 0.3 = 8.4 world units. Child localScale
-        // of 0.3 = 8.4 world units wide/tall.
-        Color earColor = new Color(0.42f, 0.27f, 0.14f);   // darker brown
+        Color earColor  = new Color(0.42f, 0.27f, 0.14f);   // dark brown
+        Color tailColor = new Color(0.38f, 0.24f, 0.12f);   // darker brown
+        Color seedWhite = Color.white;
+        Color mouthCol  = new Color(0.20f, 0.10f, 0.05f);
+
+        // Tail — long thin dark-brown rect south of the body, behind the
+        // root (sortingOrder 49 < body 50) so the body appears to overlap
+        // its base. Local positions/scales are in parent's local space;
+        // parent scale 28 means local 0.10 = 2.8 world units.
+        AddMonkeyPart(go.transform, "Tail", new Vector3(0.10f, -0.55f, 0f),
+                      new Vector3(0.10f, 0.45f, 1f), tailColor, 49);
+
+        // Two ears.
         AddMonkeyPart(go.transform, "EarL", new Vector3(-0.42f, 0.42f, 0f),
                       new Vector3(0.30f, 0.30f, 1f), earColor, 51);
         AddMonkeyPart(go.transform, "EarR", new Vector3( 0.42f, 0.42f, 0f),
@@ -70,11 +79,22 @@ public static class U3Setup
                       new Vector3(0.55f, 0.32f, 1f),
                       new Color(0.78f, 0.62f, 0.46f), 52);
 
-        // Eyes — small black dots.
+        // Eye whites — bigger white circles behind the black pupils so
+        // the face reads as a proper face, not just dots on brown.
+        AddMonkeyPart(go.transform, "EyeWhiteL", new Vector3(-0.18f, 0.10f, 0f),
+                      new Vector3(0.22f, 0.22f, 1f), seedWhite, 52);
+        AddMonkeyPart(go.transform, "EyeWhiteR", new Vector3( 0.18f, 0.10f, 0f),
+                      new Vector3(0.22f, 0.22f, 1f), seedWhite, 52);
+
+        // Eyes — small black pupils on top of the whites.
         AddMonkeyPart(go.transform, "EyeL", new Vector3(-0.18f, 0.10f, 0f),
-                      new Vector3(0.14f, 0.14f, 1f), Color.black, 53);
+                      new Vector3(0.10f, 0.10f, 1f), Color.black, 53);
         AddMonkeyPart(go.transform, "EyeR", new Vector3( 0.18f, 0.10f, 0f),
-                      new Vector3(0.14f, 0.14f, 1f), Color.black, 53);
+                      new Vector3(0.10f, 0.10f, 1f), Color.black, 53);
+
+        // Mouth — short dark grin below the muzzle.
+        AddMonkeyPart(go.transform, "Mouth", new Vector3(0f, -0.30f, 0f),
+                      new Vector3(0.20f, 0.05f, 1f), mouthCol, 53);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
@@ -128,24 +148,73 @@ public static class U3Setup
             var existing = contents.transform.Find("Sword");
             if (existing != null) Object.DestroyImmediate(existing.gameObject);
 
-            // Build the Sword pivot (rotates around player center) and the
-            // Blade child (offset along +X so it orbits at distance 24).
+            // Build the Sword pivot (rotates around player center) and three
+            // child SpriteRenderers that compose the sword silhouette:
+            //   Grip → Crossguard → Blade  along the +X axis so the whole
+            // sword "orbits" the player as the Sword pivot rotates.
             var sword = new GameObject("Sword");
             sword.transform.SetParent(contents.transform, false);
             sword.transform.localPosition = Vector3.zero;
             var swordComp = sword.AddComponent<Sword>();
             swordComp.combat = combat;
 
+            // Grip (innermost) — brown short stub
+            var grip = new GameObject("Grip");
+            grip.transform.SetParent(sword.transform, false);
+            grip.transform.localPosition = new Vector3(8f, 0f, 0f);
+            grip.transform.localScale = new Vector3(8f, 4f, 1f);
+            var gripSr = grip.AddComponent<SpriteRenderer>();
+            gripSr.sprite = LoadWhite();
+            gripSr.color = new Color(0.45f, 0.28f, 0.15f);   // wood-brown grip
+            gripSr.sortingOrder = 200;
+            gripSr.enabled = false;
+
+            // Crossguard — short perpendicular dark-gray rect
+            var cg = new GameObject("Crossguard");
+            cg.transform.SetParent(sword.transform, false);
+            cg.transform.localPosition = new Vector3(14f, 0f, 0f);
+            cg.transform.localScale = new Vector3(4f, 12f, 1f);
+            var cgSr = cg.AddComponent<SpriteRenderer>();
+            cgSr.sprite = LoadWhite();
+            cgSr.color = new Color(0.30f, 0.30f, 0.32f);     // dark-gray steel
+            cgSr.sortingOrder = 201;
+            cgSr.enabled = false;
+
+            // Blade — long silver rect extending outward.
             var blade = new GameObject("Blade");
             blade.transform.SetParent(sword.transform, false);
-            blade.transform.localPosition = new Vector3(24f, 0f, 0f);
-            blade.transform.localScale = new Vector3(36f, 6f, 1f);
+            blade.transform.localPosition = new Vector3(30f, 0f, 0f);
+            blade.transform.localScale = new Vector3(28f, 4f, 1f);
             var bladeSr = blade.AddComponent<SpriteRenderer>();
             bladeSr.sprite = LoadWhite();
-            bladeSr.color = new Color(0.85f, 0.85f, 0.88f);  // silver
-            bladeSr.sortingOrder = 200;
+            bladeSr.color = new Color(0.88f, 0.88f, 0.93f);  // silver
+            bladeSr.sortingOrder = 202;
             bladeSr.enabled = false;
+
+            // Trail emitter at the blade tip — traces the swing arc.
+            // Disabled until Show() is called; colour set per-element by
+            // Sword.cs each swing.
+            var trailGo = new GameObject("Trail");
+            trailGo.transform.SetParent(sword.transform, false);
+            trailGo.transform.localPosition = new Vector3(44f, 0f, 0f);
+            var trail = trailGo.AddComponent<TrailRenderer>();
+            trail.time = 0.18f;
+            trail.startWidth = 8f;
+            trail.endWidth = 0f;
+            trail.minVertexDistance = 0.3f;
+            trail.numCornerVertices = 2;
+            trail.numCapVertices = 2;
+            trail.material = new Material(Shader.Find("Sprites/Default"));
+            trail.startColor = Color.white;
+            trail.endColor = new Color(1f, 1f, 1f, 0f);
+            trail.sortingOrder = 199;
+            trail.emitting = false;
+            trail.enabled = false;
+
             swordComp.blade = bladeSr;
+            swordComp.grip = gripSr;
+            swordComp.crossguard = cgSr;
+            swordComp.trail = trail;
 
             // Wire the Combat → Sword link.
             combat.sword = swordComp;

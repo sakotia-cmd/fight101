@@ -53,26 +53,47 @@ public static class U5Setup
         var go = new GameObject("Lizard");
         go.transform.localScale = new Vector3(32f, 32f, 1f);
 
+        Color bodyGreen     = new Color(0.30f, 0.55f, 0.28f);
+        Color belly         = new Color(0.50f, 0.70f, 0.40f);
+        Color spikeDark     = new Color(0.18f, 0.36f, 0.18f);
+        Color eyeYellow     = new Color(1f, 0.85f, 0.10f);
+
         var body = go.AddComponent<SpriteRenderer>();
         body.sprite = LoadWhite();
-        body.color = new Color(0.30f, 0.55f, 0.28f);   // lizard green
+        body.color = bodyGreen;
         body.sortingOrder = 50;
 
-        // Snout (lighter green)
-        AddPart(go.transform, "Snout", new Vector3(0f, -0.20f, 0f),
-                new Vector3(0.55f, 0.32f, 1f),
-                new Color(0.50f, 0.70f, 0.40f), 52);
-        // Two yellow eye dots
-        AddPart(go.transform, "EyeL", new Vector3(-0.18f, 0.12f, 0f),
-                new Vector3(0.13f, 0.13f, 1f),
-                new Color(1f, 0.85f, 0.10f), 53);
-        AddPart(go.transform, "EyeR", new Vector3( 0.18f, 0.12f, 0f),
-                new Vector3(0.13f, 0.13f, 1f),
-                new Color(1f, 0.85f, 0.10f), 53);
-        // Tail nub
-        AddPart(go.transform, "Tail", new Vector3(0f, 0.50f, 0f),
-                new Vector3(0.30f, 0.20f, 1f),
-                new Color(0.30f, 0.55f, 0.28f), 51);
+        // Tail (long thin extension north of the body — behind so the body
+        // visually overlaps its base).
+        AddPart(go.transform, "Tail", new Vector3(0f, 0.55f, 0f),
+                new Vector3(0.14f, 0.40f, 1f), bodyGreen, 49);
+        AddPart(go.transform, "TailTip", new Vector3(0f, 0.78f, 0f),
+                new Vector3(0.08f, 0.18f, 1f), bodyGreen, 49);
+
+        // Back spikes — 3 small darker triangles along the east side of the
+        // body. (Body is "facing south" since snout is at Y=-0.20.)
+        AddPart(go.transform, "SpikeN", new Vector3(0.40f, 0.22f, 0f),
+                new Vector3(0.12f, 0.10f, 1f), spikeDark, 51);
+        AddPart(go.transform, "SpikeM", new Vector3(0.45f, 0.00f, 0f),
+                new Vector3(0.12f, 0.10f, 1f), spikeDark, 51);
+        AddPart(go.transform, "SpikeS", new Vector3(0.40f, -0.20f, 0f),
+                new Vector3(0.12f, 0.10f, 1f), spikeDark, 51);
+
+        // Snout — wider base + narrower tip to fake a tapered point.
+        AddPart(go.transform, "Snout", new Vector3(0f, -0.22f, 0f),
+                new Vector3(0.55f, 0.30f, 1f), belly, 52);
+        AddPart(go.transform, "SnoutTip", new Vector3(0f, -0.42f, 0f),
+                new Vector3(0.30f, 0.20f, 1f), belly, 52);
+
+        // Eye whites (yellow), with small black pupils on top.
+        AddPart(go.transform, "EyeWhiteL", new Vector3(-0.18f, 0.12f, 0f),
+                new Vector3(0.18f, 0.18f, 1f), eyeYellow, 53);
+        AddPart(go.transform, "EyeWhiteR", new Vector3( 0.18f, 0.12f, 0f),
+                new Vector3(0.18f, 0.18f, 1f), eyeYellow, 53);
+        AddPart(go.transform, "PupilL", new Vector3(-0.16f, 0.10f, 0f),
+                new Vector3(0.07f, 0.07f, 1f), Color.black, 54);
+        AddPart(go.transform, "PupilR", new Vector3( 0.16f, 0.10f, 0f),
+                new Vector3(0.07f, 0.07f, 1f), Color.black, 54);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
