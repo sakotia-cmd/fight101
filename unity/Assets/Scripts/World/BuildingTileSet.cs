@@ -1,12 +1,11 @@
 // BuildingTileSet.cs — groups Kenney tile indices into a coherent visual
 // style for one family of buildings (roof + wall + door + awning).
 //
-// WorldBuilder.SpawnBuilding picks one Style per building by the palette's
-// sign color hue — warm-red → WarmBrick, cool-blue → CoolConcrete,
-// green → GreenModern. This is what gives the city its colour variety
-// without us having to hand-author per-palette tile maps.
-
-using UnityEngine;
+// WorldBuilder.SpawnBuilding picks one Style per building by palette index
+// — warm-red palettes get WarmBrick, cool-blue/purple get CoolConcrete,
+// green palettes get GreenModern. Explicit per-palette dispatch (vs.
+// guessing from sign-colour hue) keeps the mapping readable when adding
+// new palettes.
 
 public static class BuildingTileSet
 {
@@ -42,18 +41,29 @@ public static class BuildingTileSet
         awning = KenneyTileIds.AwningGreenStripe,
     };
 
-    // Pick a tileset by the sign colour the JS game already assigns per
-    // palette. Sign colour is the most visually-loaded "what kind of shop is
-    // this" hue, so we use it to bucket buildings into 3 tilesets.
-    public static Style Pick(Color signColor)
+    // Pick a tileset by palette index. Explicit per-palette dispatch is
+    // clearer than guessing from sign-colour hue (the prior R-vs-B
+    // dominance heuristic mis-routed MEGA's magenta sign to WarmBrick,
+    // making half of Tech-Quarter look like a brick neighbourhood).
+    //
+    // Palette indices follow WorldData.PALETTES:
+    //   0 PIZZA   warm red    → WarmBrick
+    //   1 CYBER   cool blue   → CoolConcrete
+    //   2 BAKERY  warm orange → WarmBrick
+    //   3 NEON    purple      → CoolConcrete
+    //   4 FRESH   green       → GreenModern
+    //   5 TURBO   warm orange → WarmBrick
+    //   6 TECH    bright blue → CoolConcrete
+    //   7 CAFE    pink-red    → WarmBrick
+    //   8 GAME    green       → GreenModern
+    //   9 MEGA    magenta     → CoolConcrete (cyber feel, not brick-and-mortar)
+    public static Style PickByIndex(int paletteIndex)
     {
-        // Green-dominant signs (FRESH, GAME) → green-modern.
-        if (signColor.g > signColor.r && signColor.g > signColor.b)
-            return GreenModern;
-        // Red-dominant signs (PIZZA, BAKERY, TURBO, CAFE) → warm brick.
-        if (signColor.r > signColor.b)
-            return WarmBrick;
-        // Everything else (CYBER, NEON, TECH, MEGA — cool/purple) → concrete.
-        return CoolConcrete;
+        switch (paletteIndex)
+        {
+            case 0: case 2: case 5: case 7: return WarmBrick;
+            case 4: case 8:                 return GreenModern;
+            default:                        return CoolConcrete;
+        }
     }
 }

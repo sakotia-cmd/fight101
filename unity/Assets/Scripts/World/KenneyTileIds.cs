@@ -10,7 +10,7 @@ public static class KenneyTileIds
     // --- Ground ---
     public const int GrassPlain      = 35;    // top-right of row 0, plain grass
     public const int GrassWithBush   = 34;    // grass with a tuft
-    public const int Sidewalk        = 22;    // gray flagstone
+    public const int Sidewalk        = 778;   // plain light-gray flagstone (row 21)
     public const int SidewalkManhole = 777;   // sidewalk with manhole
 
     // --- Roads ---
@@ -20,11 +20,12 @@ public static class KenneyTileIds
     public const int AsphaltLaneDash = 825;
 
     // --- Roofs (tiled across the building footprint) ---
-    // Each is a single fill tile that repeats nicely. Per-style picking lives
-    // in BuildingTileSet.cs.
-    public const int RoofRedBrick    = 40;    // warm red brick interior
-    public const int RoofGray        = 48;    // cool gray concrete interior
-    public const int RoofTan         = 103;   // warm tan / sandstone interior
+    // Each is the *centre* (M) of a 3×3 building cluster — Kenney's clusters
+    // have TL/T/TR/L/M/R/BL/B/BR; only M is a clean fill without edge lines,
+    // so it's the one to tile across the whole rooftop.
+    public const int RoofRedBrick    = 38;    // M of cluster (0,0)-(2,2)
+    public const int RoofGray        = 47;    // M of cluster (9,0)-(11,2)
+    public const int RoofTan         = 62;    // M of cluster (24,0)-(26,2)
 
     // --- Walls (tiled across facade + east depth strip) ---
     public const int WallBrickRed    = 296;   // red brick wall

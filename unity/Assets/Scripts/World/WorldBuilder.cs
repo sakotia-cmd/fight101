@@ -129,7 +129,8 @@ public class WorldBuilder : MonoBehaviour
 
                 int pi = (int)(rng.Next() * dist.pals.Length);
                 if (pi >= dist.pals.Length) pi = dist.pals.Length - 1;
-                var pal = WorldData.PALETTES[dist.pals[pi]];
+                int paletteIndex = dist.pals[pi];
+                var pal = WorldData.PALETTES[paletteIndex];
 
                 // world.js calls rng() four more times to populate per-
                 // building fields (seed, stories, hasAwning, roofItems) that
@@ -137,7 +138,7 @@ public class WorldBuilder : MonoBehaviour
                 // in sync with the JS layout.
                 rng.Next(); rng.Next(); rng.Next(); rng.Next();
 
-                SpawnBuilding(parent, x, y, w, h, pal);
+                SpawnBuilding(parent, x, y, w, h, pal, paletteIndex);
                 jsBuildings.Add(new RectInt(x, y, w, h));
                 placed++;
             }
@@ -154,11 +155,12 @@ public class WorldBuilder : MonoBehaviour
     //   SignText — palette.signText (PIZZA / CYBER / …) on top of the awning
     //   Door     — Kenney door sprite at the lower-center of the facade
     //
-    // The Style (which tiles to use) is picked by BuildingTileSet.Pick based
-    // on the palette's sign colour hue, so warm/cool/green palettes get
-    // distinct visuals without us hand-coding per-palette logic.
+    // The Style (which tiles to use) is picked by BuildingTileSet.PickByIndex
+    // from the palette index, so warm/cool/green palettes get distinct
+    // visuals without us hand-coding per-palette logic.
 
-    void SpawnBuilding(Transform parent, int jsX, int jsY, int w, int h, WorldData.Palette pal)
+    void SpawnBuilding(Transform parent, int jsX, int jsY, int w, int h,
+                       WorldData.Palette pal, int paletteIndex)
     {
         var go = new GameObject("Building");
         go.transform.SetParent(parent, false);
@@ -180,7 +182,7 @@ public class WorldBuilder : MonoBehaviour
         int sortRoof   = -Mathf.RoundToInt(roofBottom);
         int sortFacade = -Mathf.RoundToInt(facadeBottom);
 
-        var style = BuildingTileSet.Pick(pal.sign);
+        var style = BuildingTileSet.PickByIndex(paletteIndex);
 
         // 1. ROOF — Kenney tile tiled across the full footprint, no tint.
         AddTiledSprite(go.transform, "Roof",
