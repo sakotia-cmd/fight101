@@ -31,6 +31,26 @@ public static class GameState
     public const int WorldWidth = 4800;         // matches WORLD_WIDTH in world.js
     public const int WorldHeight = 4800;
 
+    // ---- Hideout ----
+    // The hideout is a 700×500 interior room placed at off-world coords so we
+    // can keep one Unity scene and teleport the player between it and the
+    // city. The constants below mirror hideout.js's 700×500 interior.
+    public const int HideoutWidth  = 700;
+    public const int HideoutHeight = 500;
+    public static readonly Vector2 HideoutOrigin =
+        new Vector2(10000f, -10000f);   // top-left corner in world space
+
+    // City door — south edge of the reserved hideout zone at JS (3900, 3000,
+    // 400, 450); Y-flipped to Unity that's centred at (4100, -3375).
+    public static readonly Vector2 HideoutExteriorDoor =
+        new Vector2(4100f, -3375f);
+
+    // Interior teleport targets.
+    public static readonly Vector2 HideoutInteriorStart =
+        HideoutOrigin + new Vector2(350f, -100f);    // near the top, centred
+    public static readonly Vector2 HideoutInteriorExit =
+        HideoutOrigin + new Vector2(350f, -440f);    // just above the exit door
+
     // ---- Scene mode flags ----
     public static bool insideHideout = false;
     public static bool decorateMode = false;
@@ -48,5 +68,10 @@ public static class GameState
     {
         playerHP = playerMaxHP;
         gameOver = false;
+        // Dying inside the hideout returns the player to the city on
+        // restart — otherwise R would respawn them in the hideout interior
+        // (off-world coords) which is disorienting.
+        insideHideout = false;
+        decorateMode  = false;
     }
 }

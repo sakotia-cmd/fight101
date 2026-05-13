@@ -48,7 +48,7 @@ public static class U3Setup
         Directory.CreateDirectory("Assets/Prefabs");
 
         var go = new GameObject("Monkey");
-        go.transform.localScale = new Vector3(28f, 28f, 1f);
+        go.transform.localScale = new Vector3(36f, 36f, 1f);
 
         // Main body — brown square. SpriteRenderer is on the root so
         // Enemy.cs's flash-on-hit/depth-sort logic finds it.

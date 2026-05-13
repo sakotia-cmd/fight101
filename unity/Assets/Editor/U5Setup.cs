@@ -52,7 +52,7 @@ public static class U5Setup
     {
         Directory.CreateDirectory("Assets/Prefabs");
         var go = new GameObject("Lizard");
-        go.transform.localScale = new Vector3(32f, 32f, 1f);
+        go.transform.localScale = new Vector3(40f, 40f, 1f);
 
         Color bodyGreen     = new Color(0.30f, 0.55f, 0.28f);
         Color belly         = new Color(0.50f, 0.70f, 0.40f);
@@ -196,14 +196,13 @@ public static class U5Setup
         shop = new GameObject("Shop");
         shop.AddComponent<Shop>();
 
-        // Shopkeeper GameObject placed in the city near the player spawn.
-        // The JS shopkeeper sits inside the hideout (U6); for U5 we put it
-        // in the city so the shop is testable now.
+        // Shopkeeper lives inside the hideout (U6) — top-right of the
+        // interior room. World coords are HideoutOrigin + interior offset.
         var keeper = GameObject.Find("Shopkeeper");
         if (keeper != null) Object.DestroyImmediate(keeper);
         keeper = new GameObject("Shopkeeper");
-        // (200, -250) — just up-and-right of the player spawn at (400, -400).
-        keeper.transform.position = new Vector3(200f, -250f, 0f);
+        Vector2 keeperPos = GameState.HideoutOrigin + new Vector2(550f, -90f);
+        keeper.transform.position = new Vector3(keeperPos.x, keeperPos.y, 0f);
 
         var sr = keeper.AddComponent<SpriteRenderer>();
         sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/White.png");
