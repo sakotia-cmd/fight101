@@ -48,13 +48,18 @@ public class WorldBuilder : MonoBehaviour
 
         BuildGrounds();
         BuildRoads();
+        BuildLaneMarkings();
         BuildBuildings();
+        BuildDecorations();
     }
 
     // --- Layers ---
-    const int SortOrderGround = -2000;
-    const int SortOrderRoad   = -1500;
-    // Buildings get -y as their sortingOrder, set in Building.Awake().
+    const int SortOrderGround        = -2000;
+    const int SortOrderRoad          = -1500;
+    const int SortOrderLaneMarkings  = -1400;
+    // Buildings + decorations use -y as their sortingOrder, so anything that
+    // sits south of another object renders on top of it. Set in
+    // Building.Awake() for buildings; set per-sprite for decorations.
 
     void BuildGrounds()
     {
@@ -98,6 +103,224 @@ public class WorldBuilder : MonoBehaviour
                        asphalt, fallback,
                        SortOrderRoad, addCollider: false);
         }
+    }
+
+    // Phase C — a 16-unit-wide strip of "dashed center line" tile down the
+    // length of every road. Sits above the asphalt and below buildings.
+    void BuildLaneMarkings()
+    {
+        var dashTile = KenneyTiles.Tile(KenneyTileIds.AsphaltLaneDash);
+        if (dashTile == null) return;  // skip silently if Kenney tiles missing
+
+        var parent = new GameObject("LaneMarkings").transform;
+        parent.SetParent(transform, false);
+
+        const int Lane = 16;  // one tile wide
+
+        for (int i = 0; i < WorldData.ROADS.Length; i++)
+        {
+            var r = WorldData.ROADS[i];
+            int mx, my, mw, mh;
+            if (r.w > r.h)
+            {
+                // Horizontal road — markings run east-west along the centre.
+                mx = r.x;
+                my = r.y + (r.h - Lane) / 2;
+                mw = r.w;
+                mh = Lane;
+            }
+            else
+            {
+                // Vertical road — markings run north-south along the centre.
+                mx = r.x + (r.w - Lane) / 2;
+                my = r.y;
+                mw = Lane;
+                mh = r.h;
+            }
+
+            SpawnTiled(parent, "Lane_" + i, mx, my, mw, mh,
+                       dashTile, Color.white,
+                       SortOrderLaneMarkings, addCollider: false);
+        }
+    }
+
+    // Phase D — scatter Kenney prop sprites (trees, lamps, dumpsters) across
+    // the world. Uses a separate seeded RNG so we don't disturb the building
+    // RNG sync with world.js. Runs AFTER BuildBuildings so we can reject prop
+    // positions that overlap building footprints via jsBuildings.
+    void BuildDecorations()
+    {
+        var parent = new GameObject("Decorations").transform;
+        parent.SetParent(transform, false);
+
+        var rng = new CityRng(7);  // separate seed from buildings (42)
+
+        var treeGreen     = KenneyTiles.Tile(KenneyTileIds.TreeGreen);
+        var treeAutumn    = KenneyTiles.Tile(KenneyTileIds.TreeAutumn);
+        var lamp          = KenneyTiles.Tile(KenneyTileIds.StreetLamp);
+        var dumpsterGreen = KenneyTiles.Tile(KenneyTileIds.DumpsterGreen);
+
+        BuildTrees(parent, rng, treeGreen, treeAutumn);
+        BuildLamps(parent, rng, lamp);
+        BuildDumpsters(parent, rng, dumpsterGreen);
+    }
+
+    void BuildTrees(Transform parent, CityRng rng, Sprite treeGreen, Sprite treeAutumn)
+    {
+        const int TreeSize = 16;
+
+        foreach (var dist in WorldData.DISTRICTS)
+        {
+            // Only green / outskirts districts get trees.
+            bool isGreen =
+                dist.name == "Residential" || dist.name == "Park" ||
+                dist.name == "Outskirts"   || dist.name == "Suburbs" ||
+                dist.name == "Hideout Zone";
+            if (!isGreen) continue;
+
+            int target = dist.name switch
+            {
+                "Park"                              => 30,
+                "Outskirts" or "Suburbs"            => 22,
+                _                                   => 14,
+            };
+
+            int placed = 0;
+            int attempts = 0;
+            int maxAttempts = target * 8;
+
+            while (placed < target && attempts < maxAttempts)
+            {
+                attempts++;
+                int tx = Round(dist.x + 24 + rng.Next() * (dist.w - 48 - TreeSize));
+                int ty = Round(dist.y + 24 + rng.Next() * (dist.h - 48 - TreeSize));
+
+                if (OverlapsBuildings(tx, ty, TreeSize, TreeSize, 8)) continue;
+                if (OverlapsRoads(tx, ty, TreeSize, TreeSize)) continue;
+                if (OverlapsReserved(tx, ty, TreeSize, TreeSize)) continue;
+
+                bool autumn = rng.Next() < 0.3f;
+                Sprite tile = autumn ? treeAutumn : treeGreen;
+                PlaceDecorSprite(parent, autumn ? "TreeA" : "TreeG",
+                                 tx, ty, TreeSize, TreeSize,
+                                 tile, new Color(0.25f, 0.55f, 0.25f));
+                placed++;
+            }
+        }
+    }
+
+    void BuildLamps(Transform parent, CityRng rng, Sprite lamp)
+    {
+        const int LampSize = 16;
+        const int LampStep = 240;   // one lamp every ~15 tiles along the road
+        const int LampOffset = 20;  // distance from road edge
+
+        for (int i = 0; i < WorldData.ROADS.Length; i++)
+        {
+            var r = WorldData.ROADS[i];
+            bool horizontal = r.w > r.h;
+            int length = horizontal ? r.w : r.h;
+
+            for (int t = LampStep; t < length - LampStep; t += LampStep)
+            {
+                // Slight offset jitter so lamps don't look mechanical.
+                int jitter = (int)((rng.Next() - 0.5f) * 40f);
+                int axisPos = t + jitter;
+
+                for (int side = 0; side < 2; side++)
+                {
+                    int lx, ly;
+                    if (horizontal)
+                    {
+                        lx = r.x + axisPos;
+                        ly = (side == 0)
+                            ? r.y - LampOffset
+                            : r.y + r.h + LampOffset - LampSize;
+                    }
+                    else
+                    {
+                        lx = (side == 0)
+                            ? r.x - LampOffset
+                            : r.x + r.w + LampOffset - LampSize;
+                        ly = r.y + axisPos;
+                    }
+
+                    if (OverlapsBuildings(lx, ly, LampSize, LampSize, 4)) continue;
+                    if (OverlapsReserved(lx, ly, LampSize, LampSize)) continue;
+
+                    PlaceDecorSprite(parent, "Lamp",
+                                     lx, ly, LampSize, LampSize,
+                                     lamp, new Color(0.6f, 0.6f, 0.6f));
+                }
+            }
+        }
+    }
+
+    void BuildDumpsters(Transform parent, CityRng rng, Sprite dumpster)
+    {
+        const int DumpsterSize = 16;
+
+        // One dumpster per building in Industrial / Market districts, placed
+        // a few units east of the building's east wall.
+        foreach (var b in jsBuildings)
+        {
+            // Cheap district lookup by point-in-rect of the building's centre.
+            int cx = b.x + b.width / 2;
+            int cy = b.y + b.height / 2;
+            string distName = null;
+            foreach (var d in WorldData.DISTRICTS)
+            {
+                if (cx >= d.x && cx < d.x + d.w && cy >= d.y && cy < d.y + d.h)
+                {
+                    distName = d.name;
+                    break;
+                }
+            }
+            if (distName != "Industrial" && distName != "Market") continue;
+
+            // Skip 70% of buildings so the city isn't littered.
+            if (rng.Next() > 0.3f) continue;
+
+            int dx = b.x + b.width + 6;
+            int dy = b.y + b.height - DumpsterSize;
+            if (OverlapsBuildings(dx, dy, DumpsterSize, DumpsterSize, 0)) continue;
+            if (OverlapsRoads(dx, dy, DumpsterSize, DumpsterSize)) continue;
+
+            PlaceDecorSprite(parent, "Dumpster",
+                             dx, dy, DumpsterSize, DumpsterSize,
+                             dumpster, new Color(0.3f, 0.5f, 0.3f));
+        }
+    }
+
+    // Place a single Kenney tile at JS top-left coords. Y-sorted so it
+    // layers correctly with buildings and other decorations.
+    void PlaceDecorSprite(Transform parent, string name,
+                          int jsX, int jsY, int w, int h,
+                          Sprite sprite, Color fallback)
+    {
+        float cx = jsX + w * 0.5f;
+        float cy = -(jsY + h * 0.5f);
+
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = new Vector3(cx, cy, 0f);
+
+        var sr = go.AddComponent<SpriteRenderer>();
+        if (sprite != null)
+        {
+            sr.sprite = sprite;
+            sr.color = Color.white;
+            var b = sprite.bounds.size;
+            if (b.x > 0 && (Mathf.Abs(b.x - w) > 0.01f || Mathf.Abs(b.y - h) > 0.01f))
+                go.transform.localScale = new Vector3(w / b.x, h / b.y, 1f);
+        }
+        else
+        {
+            sr.sprite = whiteSprite;
+            sr.color = fallback;
+            go.transform.localScale = new Vector3(w, h, 1f);
+        }
+        sr.sortingOrder = -Mathf.RoundToInt(cy);
     }
 
     void BuildBuildings()
