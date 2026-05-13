@@ -1,28 +1,28 @@
-// HUD.cs — health bar + game-over overlay.
+// HUD.cs — health bar + game-over overlay + weapon panel + counters.
 //
-// Uses legacy uGUI (Image, Text) because the TMP font asset hasn't been
-// imported. The visuals are deliberately ugly placeholders — the JS game
-// has the same vibe. U10 / a polish pass can swap in nicer text.
+// Uses TextMeshPro for crisp signed-distance-field text at any scale.
+// Image fields stay on uGUI (TMP doesn't replace those).
 //
 // Health bar: a filled Image. Color shifts green → orange → red as HP
 // drops, matching drawHealthBar() in combat.js.
 
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class HUD : MonoBehaviour
 {
     public Image healthFill;
-    public Text  healthText;
+    public TextMeshProUGUI healthText;
     public GameObject gameOverPanel;
 
     // Weapon panel (added in U4).
-    public Text       weaponLabel;     // "Wood Sword" / "Fire Bow" / etc.
-    public Image      weaponIconBg;    // colored chip behind the slot letter
-    public Text       weaponIconLetter;// "S" / "B" / "G" / "T"
-    public Image[]    slotChips;       // 4 chips for slots 1-4
-    public Text       coinText;        // top-right coin counter
-    public Text       hamburgerText;   // top-right hamburger counter
+    public TextMeshProUGUI weaponLabel;       // "Wood Sword" / "Fire Bow" / etc.
+    public Image           weaponIconBg;      // colored chip behind the slot letter
+    public TextMeshProUGUI weaponIconLetter;  // "S" / "B" / "G" / "T"
+    public Image[]         slotChips;         // 4 chips for slots 1-4
+    public TextMeshProUGUI coinText;          // top-right coin counter
+    public TextMeshProUGUI hamburgerText;     // top-right hamburger counter
 
     void Awake()
     {
@@ -93,10 +93,12 @@ public class HUD : MonoBehaviour
 
     void UpdateInventoryText()
     {
+        // Drop the "$ " / "Burgers " prefixes — the inline icon set up by
+        // U4Setup carries that meaning visually.
         if (coinText != null)
-            coinText.text = "$ " + GameState.playerCoins;
+            coinText.text = GameState.playerCoins.ToString();
         if (hamburgerText != null && Inventory.Instance != null)
-            hamburgerText.text = "Burgers " + Inventory.Instance.hamburgers;
+            hamburgerText.text = Inventory.Instance.hamburgers.ToString();
     }
 
     void OnPlayerDied()

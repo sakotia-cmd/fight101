@@ -19,6 +19,7 @@
 
 #if UNITY_EDITOR
 using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -233,7 +234,7 @@ public static class U4Setup
         }
         var hud = canvasGo.GetComponent<HUD>();
         if (hud == null) hud = canvasGo.AddComponent<HUD>();
-        var font = LoadFont();
+        var font = LoadTMPFont();
 
         // Remove any prior weapon panel so this is idempotent.
         var oldPanel = canvasGo.transform.Find("WeaponPanel");
@@ -251,14 +252,14 @@ public static class U4Setup
                               Color.white, anchor: new Vector2(0f, 0.5f),
                               pivot: new Vector2(0f, 0.5f));
         hud.weaponIconBg = iconBg.GetComponent<Image>();
-        var letter = NewText(iconBg.transform, "Letter", "S",
-                             font, 14, TextAnchor.MiddleCenter, Color.white);
+        var letter = NewTMPText(iconBg.transform, "Letter", "S",
+                                font, 14, TextAlignmentOptions.Center, Color.white);
         FillParent(letter.gameObject);
         hud.weaponIconLetter = letter;
 
         // Weapon label.
-        var label = NewText(panel.transform, "Label", "Wood Sword",
-                            font, 14, TextAnchor.MiddleLeft, Color.white);
+        var label = NewTMPText(panel.transform, "Label", "Wood Sword",
+                               font, 14, TextAlignmentOptions.Left, Color.white);
         var labelRT = label.GetComponent<RectTransform>();
         labelRT.anchorMin = new Vector2(0f, 0f);
         labelRT.anchorMax = new Vector2(1f, 1f);
@@ -276,13 +277,14 @@ public static class U4Setup
                                 new Color(0.4f, 0.4f, 0.4f),
                                 anchor: new Vector2(1f, 0.5f),
                                 pivot: new Vector2(1f, 0.5f));
-            var num = NewText(chip.transform, "n", (i+1).ToString(),
-                              font, 11, TextAnchor.MiddleCenter, Color.white);
+            var num = NewTMPText(chip.transform, "n", (i+1).ToString(),
+                                 font, 11, TextAlignmentOptions.Center, Color.white);
             FillParent(num.gameObject);
             hud.slotChips[i] = chip.GetComponent<Image>();
         }
 
-        // Top-right counters.
+        // Top-right counters. Each is an inline icon Image + a TMP number
+        // (no leading "$ " or "Burgers " word — the icon carries that).
         var oldInv = canvasGo.transform.Find("InventoryCounters");
         if (oldInv != null) Object.DestroyImmediate(oldInv.gameObject);
         var inv = new GameObject("InventoryCounters", typeof(RectTransform));
@@ -292,28 +294,47 @@ public static class U4Setup
         invRT.anchorMax = new Vector2(1f, 1f);
         invRT.pivot     = new Vector2(1f, 1f);
         invRT.anchoredPosition = new Vector2(-15f, -15f);
-        invRT.sizeDelta = new Vector2(180f, 40f);
+        invRT.sizeDelta = new Vector2(180f, 50f);
 
-        var coinT = NewText(inv.transform, "CoinText", "$ 0",
-                            font, 16, TextAnchor.UpperRight, new Color(1f, 0.84f, 0f));
+        var whiteUI = LoadWhiteUI();
+
+        // Coin row (top).
+        var coinIcon = NewImage(inv.transform, "CoinIcon",
+                                new Vector2(-32f, -8f), new Vector2(18f, 18f),
+                                new Color(1f, 0.84f, 0f),
+                                anchor: new Vector2(1f, 1f),
+                                pivot: new Vector2(1f, 1f));
+        coinIcon.GetComponent<Image>().sprite = whiteUI;
+        var coinT = NewTMPText(inv.transform, "CoinText", "0",
+                               font, 16, TextAlignmentOptions.MidlineRight,
+                               new Color(1f, 0.84f, 0f));
         var coinRT = coinT.GetComponent<RectTransform>();
-        coinRT.anchorMin = new Vector2(0f, 0.5f);
+        coinRT.anchorMin = new Vector2(1f, 1f);
         coinRT.anchorMax = new Vector2(1f, 1f);
-        coinRT.offsetMin = Vector2.zero;
-        coinRT.offsetMax = Vector2.zero;
+        coinRT.pivot     = new Vector2(1f, 1f);
+        coinRT.anchoredPosition = new Vector2(0f, -2f);
+        coinRT.sizeDelta = new Vector2(80f, 22f);
         hud.coinText = coinT;
 
-        var burgerT = NewText(inv.transform, "BurgerText", "Burgers 0",
-                              font, 14, TextAnchor.UpperRight, Color.white);
+        // Burger row (bottom).
+        var burgerIcon = NewImage(inv.transform, "BurgerIcon",
+                                  new Vector2(-32f, -30f), new Vector2(18f, 18f),
+                                  new Color(0.93f, 0.72f, 0.30f),
+                                  anchor: new Vector2(1f, 1f),
+                                  pivot: new Vector2(1f, 1f));
+        burgerIcon.GetComponent<Image>().sprite = whiteUI;
+        var burgerT = NewTMPText(inv.transform, "BurgerText", "0",
+                                 font, 14, TextAlignmentOptions.MidlineRight, Color.white);
         var burgerRT = burgerT.GetComponent<RectTransform>();
-        burgerRT.anchorMin = new Vector2(0f, 0f);
-        burgerRT.anchorMax = new Vector2(1f, 0.5f);
-        burgerRT.offsetMin = Vector2.zero;
-        burgerRT.offsetMax = Vector2.zero;
+        burgerRT.anchorMin = new Vector2(1f, 1f);
+        burgerRT.anchorMax = new Vector2(1f, 1f);
+        burgerRT.pivot     = new Vector2(1f, 1f);
+        burgerRT.anchoredPosition = new Vector2(0f, -24f);
+        burgerRT.sizeDelta = new Vector2(80f, 20f);
         hud.hamburgerText = burgerT;
     }
 
-    // --- Tiny UGUI helpers (copies of the ones in U3Setup) ---
+    // --- Tiny UGUI helpers ---
 
     static GameObject NewImage(Transform parent, string name, Vector2 anchoredPos,
                                Vector2 size, Color color,
@@ -332,18 +353,21 @@ public static class U4Setup
         return go;
     }
 
-    static Text NewText(Transform parent, string name, string content,
-                        Font font, int fontSize, TextAnchor align, Color color)
+    static TextMeshProUGUI NewTMPText(Transform parent, string name, string content,
+                                      TMP_FontAsset font, int fontSize,
+                                      TextAlignmentOptions align, Color color)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
-        var t = go.GetComponent<Text>();
+        var t = go.GetComponent<TextMeshProUGUI>();
         t.font = font;
         t.fontSize = fontSize;
         t.alignment = align;
         t.color = color;
         t.text = content;
-        t.fontStyle = FontStyle.Bold;
+        t.fontStyle = FontStyles.Bold;
+        t.enableWordWrapping = false;
+        t.overflowMode = TextOverflowModes.Overflow;
         return t;
     }
 
@@ -356,11 +380,21 @@ public static class U4Setup
         rt.offsetMax = Vector2.zero;
     }
 
-    static Font LoadFont()
+    static TMP_FontAsset LoadTMPFont()
     {
-        var f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (f != null) return f;
-        return Resources.GetBuiltinResource<Font>("Arial.ttf");
+        const string path = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
+        var f = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+        if (f == null) throw new System.Exception(
+            $"TMP font missing at {path} — run ImportTMP.Run first.");
+        return f;
+    }
+
+    static Sprite LoadWhiteUI()
+    {
+        var s = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/White.png");
+        if (s == null) throw new System.Exception(
+            "White.png missing — run U2Setup first.");
+        return s;
     }
 }
 #endif

@@ -14,6 +14,7 @@
 
 #if UNITY_EDITOR
 using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -226,8 +227,7 @@ public static class U5Setup
         var old = canvasGo.transform.Find("ShopPanel");
         if (old != null) Object.DestroyImmediate(old.gameObject);
 
-        var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
-                ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+        var font = LoadTMPFont();
 
         // Dark overlay covering the whole screen.
         var panel = new GameObject("ShopPanel",
@@ -251,8 +251,8 @@ public static class U5Setup
         card.GetComponent<Image>().color = new Color(0.16f, 0.13f, 0.25f, 1f);
 
         // Title.
-        var title = NewText(card.transform, "Title", "SHOP", font, 22,
-                            TextAnchor.UpperCenter, new Color(1f, 0.84f, 0f));
+        var title = NewTMPText(card.transform, "Title", "SHOP", font, 22,
+                               TextAlignmentOptions.Top, new Color(1f, 0.84f, 0f));
         var titleRT = title.GetComponent<RectTransform>();
         titleRT.anchorMin = new Vector2(0f, 1f);
         titleRT.anchorMax = new Vector2(1f, 1f);
@@ -260,9 +260,9 @@ public static class U5Setup
         titleRT.anchoredPosition = new Vector2(0f, -12f);
         titleRT.sizeDelta = new Vector2(0f, 30f);
 
-        var coinLine = NewText(card.transform, "CoinLine", "Your coins: 0",
-                               font, 14, TextAnchor.UpperCenter,
-                               new Color(1f, 0.84f, 0f));
+        var coinLine = NewTMPText(card.transform, "CoinLine", "Your coins: 0",
+                                  font, 14, TextAlignmentOptions.Top,
+                                  new Color(1f, 0.84f, 0f));
         var coinRT = coinLine.GetComponent<RectTransform>();
         coinRT.anchorMin = new Vector2(0f, 1f);
         coinRT.anchorMax = new Vector2(1f, 1f);
@@ -281,8 +281,8 @@ public static class U5Setup
         listRT.sizeDelta = new Vector2(-20f, 410f);
 
         // Message text near bottom.
-        var msg = NewText(card.transform, "Message", "", font, 14,
-                          TextAnchor.LowerCenter, Color.white);
+        var msg = NewTMPText(card.transform, "Message", "", font, 14,
+                             TextAlignmentOptions.Bottom, Color.white);
         var msgRT = msg.GetComponent<RectTransform>();
         msgRT.anchorMin = new Vector2(0f, 0f);
         msgRT.anchorMax = new Vector2(1f, 0f);
@@ -291,10 +291,10 @@ public static class U5Setup
         msgRT.sizeDelta = new Vector2(0f, 20f);
 
         // Hint line.
-        var hint = NewText(card.transform, "Hint",
-                           "UP/DOWN: select | ENTER: buy | ESC: close",
-                           font, 11, TextAnchor.LowerCenter,
-                           new Color(0.4f, 0.4f, 0.55f));
+        var hint = NewTMPText(card.transform, "Hint",
+                              "UP/DOWN: select | ENTER: buy | ESC: close",
+                              font, 11, TextAlignmentOptions.Bottom,
+                              new Color(0.4f, 0.4f, 0.55f));
         var hintRT = hint.GetComponent<RectTransform>();
         hintRT.anchorMin = new Vector2(0f, 0f);
         hintRT.anchorMax = new Vector2(1f, 0f);
@@ -313,19 +313,31 @@ public static class U5Setup
         panel.SetActive(false);
     }
 
-    static Text NewText(Transform parent, string name, string content,
-                        Font font, int sz, TextAnchor align, Color color)
+    static TextMeshProUGUI NewTMPText(Transform parent, string name, string content,
+                                      TMP_FontAsset font, int sz,
+                                      TextAlignmentOptions align, Color color)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
-        var t = go.GetComponent<Text>();
+        var t = go.GetComponent<TextMeshProUGUI>();
         t.font = font;
         t.fontSize = sz;
         t.alignment = align;
         t.color = color;
         t.text = content;
-        t.fontStyle = FontStyle.Bold;
+        t.fontStyle = FontStyles.Bold;
+        t.enableWordWrapping = false;
+        t.overflowMode = TextOverflowModes.Overflow;
         return t;
+    }
+
+    static TMP_FontAsset LoadTMPFont()
+    {
+        const string path = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
+        var f = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+        if (f == null) throw new System.Exception(
+            $"TMP font missing at {path} — run ImportTMP.Run first.");
+        return f;
     }
 }
 #endif

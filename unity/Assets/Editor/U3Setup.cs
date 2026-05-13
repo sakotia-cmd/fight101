@@ -9,6 +9,7 @@
 
 #if UNITY_EDITOR
 using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -289,10 +290,10 @@ public static class U3Setup
 
         hud.healthFill = fillImg;
 
-        // HP text overlay.
-        var font = LoadFont();
-        var hpText = NewText(bg.transform, "HealthText", "100 / 100", font, 12,
-                             TextAnchor.MiddleCenter, Color.white);
+        // HP text overlay — TMP for crisp signed-distance-field text.
+        var font = LoadTMPFont();
+        var hpText = NewTMPText(bg.transform, "HealthText", "100 / 100", font, 12,
+                                TextAlignmentOptions.Center, Color.white);
         var hpRT = hpText.gameObject.GetComponent<RectTransform>();
         hpRT.anchorMin = new Vector2(0f, 0f);
         hpRT.anchorMax = new Vector2(1f, 1f);
@@ -311,17 +312,17 @@ public static class U3Setup
         panelRT.offsetMin = Vector2.zero;
         panelRT.offsetMax = Vector2.zero;
 
-        var goText = NewText(panel.transform, "GameOverText", "GAME OVER",
-                             font, 64, TextAnchor.MiddleCenter,
-                             new Color(1f, 0.13f, 0.13f));
+        var goText = NewTMPText(panel.transform, "GameOverText", "GAME OVER",
+                                font, 64, TextAlignmentOptions.Center,
+                                new Color(1f, 0.13f, 0.13f));
         var goTextRT = goText.gameObject.GetComponent<RectTransform>();
         goTextRT.anchorMin = new Vector2(0.5f, 0.5f);
         goTextRT.anchorMax = new Vector2(0.5f, 0.5f);
         goTextRT.anchoredPosition = new Vector2(0f, 30f);
         goTextRT.sizeDelta = new Vector2(800f, 100f);
 
-        var hintText = NewText(panel.transform, "RestartHint", "Press R to try again",
-                               font, 24, TextAnchor.MiddleCenter, Color.white);
+        var hintText = NewTMPText(panel.transform, "RestartHint", "Press R to try again",
+                                  font, 24, TextAlignmentOptions.Center, Color.white);
         var hintRT = hintText.gameObject.GetComponent<RectTransform>();
         hintRT.anchorMin = new Vector2(0.5f, 0.5f);
         hintRT.anchorMax = new Vector2(0.5f, 0.5f);
@@ -361,27 +362,31 @@ public static class U3Setup
         return go;
     }
 
-    static Text NewText(Transform parent, string name, string content,
-                        Font font, int fontSize, TextAnchor align, Color color)
+    static TextMeshProUGUI NewTMPText(Transform parent, string name, string content,
+                                      TMP_FontAsset font, int fontSize,
+                                      TextAlignmentOptions align, Color color)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
-        var t = go.GetComponent<Text>();
+        var t = go.GetComponent<TextMeshProUGUI>();
         t.font = font;
         t.fontSize = fontSize;
         t.alignment = align;
         t.color = color;
         t.text = content;
-        t.fontStyle = FontStyle.Bold;
+        t.fontStyle = FontStyles.Bold;
+        t.enableWordWrapping = false;
+        t.overflowMode = TextOverflowModes.Overflow;
         return t;
     }
 
-    static Font LoadFont()
+    static TMP_FontAsset LoadTMPFont()
     {
-        // Unity 6 deprecated the built-in Arial; LegacyRuntime.ttf replaces it.
-        var f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (f != null) return f;
-        return Resources.GetBuiltinResource<Font>("Arial.ttf");
+        const string path = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
+        var f = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+        if (f == null) throw new System.Exception(
+            $"TMP font missing at {path} — run ImportTMP.Run first.");
+        return f;
     }
 }
 #endif

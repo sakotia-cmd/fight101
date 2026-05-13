@@ -1,4 +1,4 @@
-// ShopUI.cs — UGUI overlay that renders the shop panel and handles input.
+// ShopUI.cs — TMP overlay that renders the shop panel and handles input.
 //
 // Input map:
 //   E    open (handled by Shopkeeper.cs when player is nearby + insideHideout)
@@ -11,29 +11,30 @@
 // items already bought.
 
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ShopUI : MonoBehaviour
 {
     public GameObject panel;       // root panel that toggles with shop state
-    public Text       title;       // "SHOP" / coin count line
-    public Text       coinLine;
-    public RectTransform listParent;
-    public Text       messageText;
+    public TextMeshProUGUI title;       // "SHOP" / coin count line
+    public TextMeshProUGUI coinLine;
+    public RectTransform   listParent;
+    public TextMeshProUGUI messageText;
 
-    public Font       font;        // assigned by U5Setup
+    public TMP_FontAsset font;     // assigned by U5Setup
 
     readonly List<RowWidgets> rows = new();
 
     struct RowWidgets
     {
-        public GameObject root;
-        public Text  name;
-        public Text  price;
-        public Text  desc;
-        public Text  owned;
-        public Image bg;
+        public GameObject       root;
+        public TextMeshProUGUI  name;
+        public TextMeshProUGUI  price;
+        public TextMeshProUGUI  desc;
+        public TextMeshProUGUI  owned;
+        public Image            bg;
     }
 
     void Awake()
@@ -62,10 +63,10 @@ public class ShopUI : MonoBehaviour
             {
                 root  = rowGo,
                 bg    = rowGo.GetComponent<Image>(),
-                name  = MakeText(rowGo.transform, "name",  new Rect(10f,  -2f, 0.55f, 22f), font, 14, TextAnchor.UpperLeft,  Color.white,  bold: true),
-                price = MakeText(rowGo.transform, "price", new Rect(10f, -22f, 0.40f, 16f), font, 12, TextAnchor.UpperLeft,  new Color(1f, 0.84f, 0f), bold: false),
-                desc  = MakeText(rowGo.transform, "desc",  new Rect(140f, -8f, 0.95f, 22f), font, 11, TextAnchor.UpperLeft,  new Color(0.6f, 0.6f, 0.75f), bold: false),
-                owned = MakeText(rowGo.transform, "owned", new Rect(-80f, -8f, 0.95f, 22f), font, 11, TextAnchor.UpperRight, new Color(0.3f, 0.7f, 0.3f), bold: true),
+                name  = MakeText(rowGo.transform, "name",  new Rect(10f,  -2f, 0.55f, 22f), font, 14, TextAlignmentOptions.TopLeft,  Color.white,  bold: true),
+                price = MakeText(rowGo.transform, "price", new Rect(10f, -22f, 0.40f, 16f), font, 12, TextAlignmentOptions.TopLeft,  new Color(1f, 0.84f, 0f), bold: false),
+                desc  = MakeText(rowGo.transform, "desc",  new Rect(140f, -8f, 0.95f, 22f), font, 11, TextAlignmentOptions.TopLeft,  new Color(0.6f, 0.6f, 0.75f), bold: false),
+                owned = MakeText(rowGo.transform, "owned", new Rect(-80f, -8f, 0.95f, 22f), font, 11, TextAlignmentOptions.TopRight, new Color(0.3f, 0.7f, 0.3f), bold: true),
             };
             rw.bg.color = new Color(0f, 0f, 0f, 0f);   // transparent unless selected
 
@@ -73,10 +74,11 @@ public class ShopUI : MonoBehaviour
         }
     }
 
-    static Text MakeText(Transform parent, string name, Rect r, Font font, int sz,
-                         TextAnchor anchor, Color color, bool bold)
+    static TextMeshProUGUI MakeText(Transform parent, string name, Rect r,
+                                    TMP_FontAsset font, int sz,
+                                    TextAlignmentOptions anchor, Color color, bool bold)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 1f);
@@ -84,13 +86,14 @@ public class ShopUI : MonoBehaviour
         rt.pivot = new Vector2(0f, 1f);
         rt.anchoredPosition = new Vector2(r.x, r.y);
         rt.sizeDelta = new Vector2(-Mathf.Abs(r.x) * 0.5f, r.height);
-        var t = go.GetComponent<Text>();
+        var t = go.GetComponent<TextMeshProUGUI>();
         t.font = font;
         t.fontSize = sz;
         t.alignment = anchor;
         t.color = color;
-        t.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
-        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
+        t.enableWordWrapping = false;
+        t.overflowMode = TextOverflowModes.Overflow;
         return t;
     }
 
