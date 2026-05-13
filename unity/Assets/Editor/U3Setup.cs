@@ -57,45 +57,45 @@ public static class U3Setup
         body.color = new Color(0.55f, 0.36f, 0.20f);   // monkey brown
         body.sortingOrder = 50;
 
-        Color earColor  = new Color(0.42f, 0.27f, 0.14f);   // dark brown
-        Color tailColor = new Color(0.38f, 0.24f, 0.12f);   // darker brown
-        Color seedWhite = Color.white;
-        Color mouthCol  = new Color(0.20f, 0.10f, 0.05f);
+        Color earColor    = new Color(0.42f, 0.27f, 0.14f);   // dark brown
+        Color tailColor   = new Color(0.38f, 0.24f, 0.12f);   // darker brown
+        Color seedWhite   = Color.white;
+        Color mouthCol    = new Color(0.20f, 0.10f, 0.05f);
 
-        // Tail — long thin dark-brown rect south of the body, behind the
-        // root (sortingOrder 49 < body 50) so the body appears to overlap
-        // its base. Local positions/scales are in parent's local space;
-        // parent scale 28 means local 0.10 = 2.8 world units.
-        AddMonkeyPart(go.transform, "Tail", new Vector3(0.10f, -0.55f, 0f),
-                      new Vector3(0.10f, 0.45f, 1f), tailColor, 49);
+        // Ears — pushed outside the body silhouette (local 0.55 > 0.50) so
+        // they stick out beyond the body edge and read as actual ears.
+        AddMonkeyPart(go.transform, "EarL", new Vector3(-0.55f, 0.45f, 0f),
+                      new Vector3(0.32f, 0.32f, 1f), earColor, 51);
+        AddMonkeyPart(go.transform, "EarR", new Vector3( 0.55f, 0.45f, 0f),
+                      new Vector3(0.32f, 0.32f, 1f), earColor, 51);
 
-        // Two ears.
-        AddMonkeyPart(go.transform, "EarL", new Vector3(-0.42f, 0.42f, 0f),
-                      new Vector3(0.30f, 0.30f, 1f), earColor, 51);
-        AddMonkeyPart(go.transform, "EarR", new Vector3( 0.42f, 0.42f, 0f),
-                      new Vector3(0.30f, 0.30f, 1f), earColor, 51);
+        // Tail — long fat dark-brown rect *outside* the south edge (local
+        // Y < -0.50 so it sticks out below the body), sortOrder 49 so the
+        // body still overlaps the base for a "tail attached to body" look.
+        AddMonkeyPart(go.transform, "Tail", new Vector3(0.15f, -0.70f, 0f),
+                      new Vector3(0.18f, 0.50f, 1f), tailColor, 49);
 
         // Muzzle — lighter patch around the lower face.
-        AddMonkeyPart(go.transform, "Muzzle", new Vector3(0f, -0.18f, 0f),
-                      new Vector3(0.55f, 0.32f, 1f),
+        AddMonkeyPart(go.transform, "Muzzle", new Vector3(0f, -0.20f, 0f),
+                      new Vector3(0.60f, 0.36f, 1f),
                       new Color(0.78f, 0.62f, 0.46f), 52);
 
         // Eye whites — bigger white circles behind the black pupils so
-        // the face reads as a proper face, not just dots on brown.
-        AddMonkeyPart(go.transform, "EyeWhiteL", new Vector3(-0.18f, 0.10f, 0f),
-                      new Vector3(0.22f, 0.22f, 1f), seedWhite, 52);
-        AddMonkeyPart(go.transform, "EyeWhiteR", new Vector3( 0.18f, 0.10f, 0f),
-                      new Vector3(0.22f, 0.22f, 1f), seedWhite, 52);
+        // the face reads as a proper face, not dots on brown.
+        AddMonkeyPart(go.transform, "EyeWhiteL", new Vector3(-0.22f, 0.12f, 0f),
+                      new Vector3(0.28f, 0.28f, 1f), seedWhite, 52);
+        AddMonkeyPart(go.transform, "EyeWhiteR", new Vector3( 0.22f, 0.12f, 0f),
+                      new Vector3(0.28f, 0.28f, 1f), seedWhite, 52);
 
-        // Eyes — small black pupils on top of the whites.
-        AddMonkeyPart(go.transform, "EyeL", new Vector3(-0.18f, 0.10f, 0f),
-                      new Vector3(0.10f, 0.10f, 1f), Color.black, 53);
-        AddMonkeyPart(go.transform, "EyeR", new Vector3( 0.18f, 0.10f, 0f),
-                      new Vector3(0.10f, 0.10f, 1f), Color.black, 53);
+        // Eyes — black pupils on top of the whites.
+        AddMonkeyPart(go.transform, "EyeL", new Vector3(-0.22f, 0.12f, 0f),
+                      new Vector3(0.14f, 0.14f, 1f), Color.black, 53);
+        AddMonkeyPart(go.transform, "EyeR", new Vector3( 0.22f, 0.12f, 0f),
+                      new Vector3(0.14f, 0.14f, 1f), Color.black, 53);
 
-        // Mouth — short dark grin below the muzzle.
-        AddMonkeyPart(go.transform, "Mouth", new Vector3(0f, -0.30f, 0f),
-                      new Vector3(0.20f, 0.05f, 1f), mouthCol, 53);
+        // Mouth — wider darker grin in the muzzle.
+        AddMonkeyPart(go.transform, "Mouth", new Vector3(0f, -0.32f, 0f),
+                      new Vector3(0.32f, 0.08f, 1f), mouthCol, 53);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;

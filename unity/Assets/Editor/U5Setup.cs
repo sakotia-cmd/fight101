@@ -64,37 +64,39 @@ public static class U5Setup
         body.color = bodyGreen;
         body.sortingOrder = 50;
 
-        // Tail (long thin extension north of the body — behind so the body
-        // visually overlaps its base).
-        AddPart(go.transform, "Tail", new Vector3(0f, 0.55f, 0f),
-                new Vector3(0.14f, 0.40f, 1f), bodyGreen, 49);
-        AddPart(go.transform, "TailTip", new Vector3(0f, 0.78f, 0f),
-                new Vector3(0.08f, 0.18f, 1f), bodyGreen, 49);
+        // Tail — extends north *outside* the body (local Y > 0.50). Two
+        // segments so it tapers visibly.
+        AddPart(go.transform, "Tail", new Vector3(0f, 0.70f, 0f),
+                new Vector3(0.18f, 0.45f, 1f), bodyGreen, 49);
+        AddPart(go.transform, "TailTip", new Vector3(0f, 0.98f, 0f),
+                new Vector3(0.10f, 0.22f, 1f), bodyGreen, 49);
 
-        // Back spikes — 3 small darker triangles along the east side of the
-        // body. (Body is "facing south" since snout is at Y=-0.20.)
-        AddPart(go.transform, "SpikeN", new Vector3(0.40f, 0.22f, 0f),
-                new Vector3(0.12f, 0.10f, 1f), spikeDark, 51);
-        AddPart(go.transform, "SpikeM", new Vector3(0.45f, 0.00f, 0f),
-                new Vector3(0.12f, 0.10f, 1f), spikeDark, 51);
-        AddPart(go.transform, "SpikeS", new Vector3(0.40f, -0.20f, 0f),
-                new Vector3(0.12f, 0.10f, 1f), spikeDark, 51);
+        // Back spikes — 3 darker spikes *outside* the east edge (local
+        // X > 0.50) so they read as protrusions sticking out of the body.
+        AddPart(go.transform, "SpikeN", new Vector3(0.62f, 0.25f, 0f),
+                new Vector3(0.18f, 0.14f, 1f), spikeDark, 51);
+        AddPart(go.transform, "SpikeM", new Vector3(0.68f, 0.00f, 0f),
+                new Vector3(0.20f, 0.14f, 1f), spikeDark, 51);
+        AddPart(go.transform, "SpikeS", new Vector3(0.62f, -0.25f, 0f),
+                new Vector3(0.18f, 0.14f, 1f), spikeDark, 51);
 
-        // Snout — wider base + narrower tip to fake a tapered point.
-        AddPart(go.transform, "Snout", new Vector3(0f, -0.22f, 0f),
-                new Vector3(0.55f, 0.30f, 1f), belly, 52);
-        AddPart(go.transform, "SnoutTip", new Vector3(0f, -0.42f, 0f),
-                new Vector3(0.30f, 0.20f, 1f), belly, 52);
+        // Snout — wider base inside the body + narrow tip outside (local
+        // Y < -0.50) so the head visibly extends south of the body.
+        AddPart(go.transform, "Snout", new Vector3(0f, -0.28f, 0f),
+                new Vector3(0.62f, 0.34f, 1f), belly, 52);
+        AddPart(go.transform, "SnoutTip", new Vector3(0f, -0.62f, 0f),
+                new Vector3(0.30f, 0.28f, 1f), belly, 52);
 
-        // Eye whites (yellow), with small black pupils on top.
-        AddPart(go.transform, "EyeWhiteL", new Vector3(-0.18f, 0.12f, 0f),
-                new Vector3(0.18f, 0.18f, 1f), eyeYellow, 53);
-        AddPart(go.transform, "EyeWhiteR", new Vector3( 0.18f, 0.12f, 0f),
-                new Vector3(0.18f, 0.18f, 1f), eyeYellow, 53);
-        AddPart(go.transform, "PupilL", new Vector3(-0.16f, 0.10f, 0f),
-                new Vector3(0.07f, 0.07f, 1f), Color.black, 54);
-        AddPart(go.transform, "PupilR", new Vector3( 0.16f, 0.10f, 0f),
-                new Vector3(0.07f, 0.07f, 1f), Color.black, 54);
+        // Eye whites (yellow), with small black pupils on top — both
+        // larger so they read at gameplay scale.
+        AddPart(go.transform, "EyeWhiteL", new Vector3(-0.22f, 0.12f, 0f),
+                new Vector3(0.24f, 0.24f, 1f), eyeYellow, 53);
+        AddPart(go.transform, "EyeWhiteR", new Vector3( 0.22f, 0.12f, 0f),
+                new Vector3(0.24f, 0.24f, 1f), eyeYellow, 53);
+        AddPart(go.transform, "PupilL", new Vector3(-0.20f, 0.10f, 0f),
+                new Vector3(0.10f, 0.10f, 1f), Color.black, 54);
+        AddPart(go.transform, "PupilR", new Vector3( 0.20f, 0.10f, 0f),
+                new Vector3(0.10f, 0.10f, 1f), Color.black, 54);
 
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
