@@ -1,0 +1,33 @@
+# Unity-generated folders that are rebuilt locally and should never be committed.
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Unity meta files for auto-generated content
+sysinfo.txt
+
+# Build outputs from build-webgl.sh
+Build/
+
+# OS / IDE noise
+.DS_Store
+.vsconfig
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db

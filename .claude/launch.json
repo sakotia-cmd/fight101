@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-l", "8000", "--no-clipboard"],
       "port": 8000
+    },
+    {
+      "name": "fight101-unity",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "unity/Build/WebGL", "-l", "8002", "--no-clipboard"],
+      "port": 8002
     }
   ]
 }

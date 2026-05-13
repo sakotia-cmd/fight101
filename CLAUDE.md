@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Fight 101 is a top-down 2D browser game built by an 8-year-old (Jay) and his dad, session-by-session with Claude Code. The full game design, story, roadmap, and original session prompts live in `FIGHT_101_PROJECT.md`. Detailed notes on what actually shipped each session live in `docs/` — read `docs/README.md` first for the index.
 
+**A Unity 2D port is in progress in `unity/` (started session U1).** It's a parallel rewrite — the JS game at the repo root is still the source of truth for behavior and the place where new features ship until the port catches up. Port plan: `~/.claude/plans/can-you-swap-game-serialized-lightning.md`. Per-session work follows the `U1`, `U2`, … numbering from that plan. When working in `unity/`, read `unity/README.md` first — it documents the one-time Unity Hub setup and the current state of the scaffold.
+
 ## Running the game
 
 No build, no install. Two options:
