@@ -1,59 +1,67 @@
-// KenneyTileIds.cs — named indices for the Kenney "Roguelike Modern City"
-// pack. The full sheet is 37 cols × 28 rows (1036 tiles); indices below were
-// identified by baking a labeled 4× upscale of tilemap_packed.png and
-// reading the labels visually. See Assets/Editor/BakeLabeledTilesheet.cs.
+// KenneyTileIds.cs — named indices for the Kenney "Tiny Town" CC0 pack.
+// Grid is 12 cols × 11 rows of 16×16 tiles (132 total); tile (col, row) →
+// index = row * 12 + col.
 //
-// Tile (col, row) → index = row * 37 + col.
+// Identified by inspecting a labeled 6× upscale of tilemap_packed.png. See
+// /tmp/kenney-dl/tiny-town-labeled.png in the conversation history for the
+// reference image.
+//
+// Tile categories below preserve the names from the previous "Roguelike
+// Modern City" pack so BuildingTileSet.cs and WorldBuilder.cs work without
+// rename. Some categories (vehicles, traffic lights, dumpsters, asphalt
+// road markings) have no Tiny Town equivalent and fall back to neutral
+// tiles (grass / dirt / fence post) so they render invisibly or read as
+// village-appropriate props.
 
 public static class KenneyTileIds
 {
     // --- Ground ---
-    public const int GrassPlain      = 35;    // top-right of row 0, plain grass
-    public const int GrassWithBush   = 34;    // grass with a tuft
-    public const int Sidewalk        = 778;   // plain light-gray flagstone (row 21)
-    public const int SidewalkManhole = 777;   // sidewalk with manhole
+    public const int GrassPlain      = 0;     // (col 0, row 0) — plain grass
+    public const int GrassWithBush   = 1;     // (col 1, row 0) — grass + tuft
+    public const int Sidewalk        = 25;    // (col 1, row 2) — dirt centre
+    public const int SidewalkManhole = 25;    // no manhole in Tiny Town
 
-    // --- Roads ---
-    // Plain dark asphalt (used in WorldBuilder.BuildRoads tiled mode).
-    public const int Asphalt         = 842;
-    // Asphalt with white dashed center line (for road interiors with markings).
-    public const int AsphaltLaneDash = 825;
+    // --- "Roads" — Tiny Town has no asphalt; dirt strip stands in. ---
+    public const int Asphalt         = 41;    // (col 5, row 3) — dirt strip
+    public const int AsphaltLaneDash = 41;    // no dashed-centre tile
 
-    // --- Roofs (tiled across the building footprint) ---
-    // Each is the *centre* (M) of a 3×3 building cluster — Kenney's clusters
-    // have TL/T/TR/L/M/R/BL/B/BR; only M is a clean fill without edge lines,
-    // so it's the one to tile across the whole rooftop.
-    public const int RoofRedBrick    = 38;    // M of cluster (0,0)-(2,2)
-    public const int RoofGray        = 47;    // M of cluster (9,0)-(11,2)
-    public const int RoofTan         = 62;    // M of cluster (24,0)-(26,2)
+    // --- Roofs — Tiny Town has 2 house roof types (blue slate / red). ---
+    // The constants keep their original 3-style names so BuildingTileSet
+    // can keep its WarmBrick / CoolConcrete / GreenModern naming.
+    public const int RoofRedBrick    = 65;    // (col 5, row 5) — red roof interior
+    public const int RoofGray        = 49;    // (col 1, row 4) — blue slate roof interior
+    public const int RoofTan         = 65;    // no third roof — reuse red
 
-    // --- Walls (tiled across facade + east depth strip) ---
-    public const int WallBrickRed    = 296;   // red brick wall
-    public const int WallBrickGray   = 300;   // gray brick wall
-    public const int WallBrickTan    = 304;   // tan / sandstone brick wall
+    // --- Walls — Tiny Town houses use brown wood or gray stone. ---
+    public const int WallBrickRed    = 73;    // (col 1, row 6) — brown wood wall
+    public const int WallBrickGray   = 77;    // (col 5, row 6) — gray stone wall
+    public const int WallBrickTan    = 73;    // reuse brown
 
-    // --- Doors (single sprite, scaled 2× to read as a door at PPU=1) ---
-    public const int DoorWoodSimple  = 580;   // wooden door with simple frame
-    public const int DoorWoodFancy   = 584;   // wooden door with inset window
-    public const int DoorGlassModern = 658;   // modern glass door
+    // --- Doors ---
+    public const int DoorWoodSimple  = 74;    // (col 2, row 6) — brown door in wall
+    public const int DoorWoodFancy   = 78;    // (col 6, row 6) — gray-stone door
+    public const int DoorGlassModern = 78;    // reuse gray-stone
 
-    // --- Awnings (sit above the door as the shop "sign band") ---
-    public const int AwningGreenStripe  = 393;   // green-and-white stripes
-    public const int AwningOrangeStripe = 397;   // orange-and-white stripes
-    public const int AwningRedStripe    = 327;   // red awning (small)
+    // --- Awnings — no striped awnings in Tiny Town; fall back to dirt. ---
+    public const int AwningGreenStripe  = 41; // dirt strip
+    public const int AwningOrangeStripe = 41;
+    public const int AwningRedStripe    = 41;
 
-    // --- Props (declared for Phase D — not used in Phase B) ---
-    public const int TreeGreen          = 478;
-    public const int TreeAutumn         = 481;
-    public const int StreetLamp         = 500;
-    public const int TrafficLight       = 518;
-    public const int TrashCanBlack      = 495;
-    public const int DumpsterGreen      = 985;
-    public const int DumpsterOrange     = 988;
-    public const int FenceChain         = 522;
+    // --- Trees (Phase D decorations) ---
+    public const int TreeGreen          = 5;  // (col 5, row 0) — small green tree
+    public const int TreeAutumn         = 3;  // (col 3, row 0) — small autumn tree
 
-    // --- Vehicles (declared for Phase D — each car spans 2 tiles) ---
-    public const int CarGreenLeft       = 661;
-    public const int CarOrangeLeft      = 919;
-    public const int VanGrayLeft        = 809;
+    // --- Props that have no Tiny Town equivalent ---
+    public const int StreetLamp         = 59; // (col 11, row 4) — vertical fence post stands in
+    public const int TrafficLight       = 59; // reuse
+    public const int TrashCan           = 92; // (col 8, row 7) — wooden chest reads as a crate
+    public const int DumpsterGreen      = 92;
+    public const int DumpsterOrange     = 92;
+    public const int FenceChain         = 80; // (col 8, row 6) — wooden fence rail
+
+    // --- Vehicles (Phase D) — Tiny Town has no vehicles. Stub with grass
+    //     so they render invisibly; remove from Decorations later. ---
+    public const int CarGreenLeft       = 0;
+    public const int CarOrangeLeft      = 0;
+    public const int VanGrayLeft        = 0;
 }

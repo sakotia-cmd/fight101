@@ -1,14 +1,18 @@
-// KenneyImport.cs — one-shot Editor utility that configures Kenney's
-// "Roguelike Modern City" tilesheet for use in the game.
+// KenneyImport.cs — one-shot Editor utility that configures the Kenney
+// CC0 tilesheet for use in the game.
+//
+// Currently uses Kenney's "Tiny Town" pack (12 cols × 11 rows of 16×16
+// tiles, no padding, 132 tiles total). This replaced the original
+// "Roguelike Modern City" pack so the world's RPG-fantasy art style
+// matches the new RPG-fantasy character sprites.
 //
 // Sets up Assets/Sprites/Kenney/Tilemap/tilemap_packed.png as:
 //   - TextureType = Sprite (Multiple)
 //   - Pixels Per Unit = 1   (so each 16x16 tile occupies 16 world units —
 //                            matches our JS-coords-as-unity-units convention)
 //   - Filter = Point        (crisp pixel art)
-//   - 37 cols × 28 rows of 16×16 tiles, no padding
 //
-// Named slices: tile_0000 … tile_1035 (row-major top-down).
+// Named slices: tile_0000 … tile_0131 (row-major top-down).
 //
 // Run from CLI:
 //   Unity -batchmode -quit -projectPath unity -executeMethod KenneyImport.Run
@@ -21,8 +25,8 @@ public static class KenneyImport
 {
     const string TilesheetPath = "Assets/Sprites/Kenney/Tilemap/tilemap_packed.png";
     const int    TileSize      = 16;
-    const int    Cols          = 37;
-    const int    Rows          = 28;
+    const int    Cols          = 12;   // Tiny Town: 12 cols × 11 rows
+    const int    Rows          = 11;
 
     public static void Run()
     {

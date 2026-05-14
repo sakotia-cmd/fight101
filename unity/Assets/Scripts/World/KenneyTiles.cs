@@ -42,8 +42,8 @@ public class KenneyTiles : MonoBehaviour
 
     public static Sprite[] All() => Get()?.sprites;
 
-    public const int Cols = 37;
-    public const int Rows = 28;
+    public const int Cols = 12;   // Tiny Town: 12 cols × 11 rows
+    public const int Rows = 11;
 
     public static int Index(int col, int row) => row * Cols + col;
 }
